@@ -2,6 +2,14 @@
 #include <stdlib.h>
 #include <raylib.h>
 
+/*
+	TODO: Figure out how to have a variable autoincrement every second. The current plan is to have each manastone autoincrement the click_counter
+	by the total number of manastones every second.
+		ex: 1 manastone   = 1  clicks/sec
+			2 manastones  = 2  clicks/sec
+			39 manastones = 39 clicks/sec
+*/
+
 int main() {
 	//init window
 	const int screen_width = 600;
