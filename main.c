@@ -27,11 +27,20 @@ int main() {
 	int click_counter = 0;
 	int mana_stonecost = 100;
 	int mana_stones = 0;
+	float second_timer = 0;
 
 	//run window
 	while(!WindowShouldClose()) {
 		Vector2 mouse_pos = GetMousePosition();
 		
+		if (mana_stones >=1) {
+			if (second_timer >= 1) { //if a second has passed
+				click_counter += mana_stones;
+				second_timer -= 1;
+			}
+			second_timer += GetFrameTime();
+		}
+
 		BeginDrawing();
 		//draw stuff
 		ClearBackground(SKYBLUE);
