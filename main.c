@@ -3,7 +3,9 @@
 #include <raylib.h>
 
 /*
-	TODO: Figure out how to have a variable autoincrement every second. The current plan is to have each manastone autoincrement the click_counter
+	TODO: Decide direction for the game. Current idea is to load some 3d and have resources gained from the clicker effect it kind of like growing
+	an egg or something.
+	DONE: Figure out how to have a variable autoincrement every second. The current plan is to have each manastone autoincrement the click_counter
 	by the total number of manastones every second.
 		ex: 1 manastone   = 1  clicks/sec
 			2 manastones  = 2  clicks/sec
@@ -94,6 +96,8 @@ int main() {
 		EndDrawing();
 	}
 	free(fps_str);
+	free(counter_txt);
+	free(counter_manastones);
 	//close window
 	CloseWindow();
 
