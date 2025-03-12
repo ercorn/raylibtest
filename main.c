@@ -25,20 +25,21 @@ int main() {
 	char *counter_txt = malloc(20 * sizeof(char));
 	char *counter_manastones = malloc(20 * sizeof(char));
 	int click_counter = 0;
-	int mana_stonecost = 100;
+	int mana_stonecost = 25;
 	int mana_stones = 0;
-	float second_timer = 0;
+	//float second_timer = 0;
+	double old_time = GetTime();
 
 	//run window
 	while(!WindowShouldClose()) {
 		Vector2 mouse_pos = GetMousePosition();
 		
+		double current_time = GetTime();
 		if (mana_stones >=1) {
-			if (second_timer >= 1) { //if a second has passed
+			if (current_time - old_time >= 1.0) { //if a second has passed
 				click_counter += mana_stones;
-				second_timer -= 1;
+				old_time = current_time;
 			}
-			second_timer += GetFrameTime();
 		}
 
 		BeginDrawing();
