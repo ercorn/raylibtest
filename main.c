@@ -3,6 +3,7 @@
 #include <raylib.h>
 
 /*
+	TODO: GOING WITH STOCK TRADING GAME. Plans in gpt. general idea is stock trading clicker where the end goal is to retire rich.
 	TODO: Decide direction for the game. Current idea is to load some 3d and have resources gained from the clicker effect it kind of like growing
 	an egg or something.
 	DONE: Figure out how to have a variable autoincrement every second. The current plan is to have each manastone autoincrement the click_counter
@@ -14,8 +15,8 @@
 
 int main() {
 	//init window
-	const int screen_width = 600;
-	const int screen_height = 400;
+	const int screen_width = 800;
+	const int screen_height = 600;
 
 	InitWindow(screen_width, screen_height, "test window");
 
@@ -23,14 +24,25 @@ int main() {
 
 	Rectangle clicker_rect = (Rectangle) { .height = 50, .width = 100, .x = screen_width - 110, .y = screen_height - 60};
 	Rectangle manastone_rect = (Rectangle) {.height = 50, .width = 100, .x = screen_width - 110, .y = screen_height - 120};
+	Rectangle tradeButton = {300, 250, 200, 50}; //stock trading button
 	char *fps_str = malloc(30 * sizeof(char));
 	char *counter_txt = malloc(20 * sizeof(char));
 	char *counter_manastones = malloc(20 * sizeof(char));
+	char *counter_money = malloc(20 * sizeof(char));
 	int click_counter = 0;
 	int mana_stonecost = 25;
 	int mana_stones = 0;
+	int money = 0;
 	//float second_timer = 0;
 	double old_time = GetTime();
+
+	//def camera
+	Camera3D camera = {0};
+	camera.position = (Vector3){10.0f, 10.0f, 10.0f};
+	camera.target = (Vector3){0.0f, 0.0f, 0.0f};
+	camera.up = (Vector3){0.0f, 1.0f, 0.0f};
+	camera.fovy = 45.0f;
+	camera.projection = CAMERA_PERSPECTIVE;
 
 	//run window
 	while(!WindowShouldClose()) {
@@ -45,8 +57,27 @@ int main() {
 		}
 
 		BeginDrawing();
+		UpdateCamera(&camera, CAMERA_ORBITAL);
 		//draw stuff
 		ClearBackground(SKYBLUE);
+
+		BeginMode3D(camera);
+
+		DrawSphere((Vector3){0.0f, 0.0f, 0.0f}, 2.0f, BLACK);
+
+		EndMode3D();
+
+		//stock trade start
+		if (CheckCollisionPointRec(mouse_pos, tradeButton)) {
+			DrawRectangleRounded(tradeButton, 0.2f, 10, LIGHTGRAY);
+			if (IsMouseButtonPressed(MOUSE_BUTTON_LEFT)) {
+				money += 10;
+			}
+		} else {
+			DrawRectangleRounded(tradeButton, 0.2f, 10, GRAY);
+		}
+		DrawText("TRADE", 350, 265, 20, BLACK);
+		//stock trade end
 
 		if (CheckCollisionPointRec(mouse_pos, clicker_rect)) { //TODO: HANDLE CLICK, HOVER, and NEITHER CASES
 			if (IsMouseButtonPressed(MOUSE_BUTTON_LEFT)) { //check mouse left click
@@ -80,9 +111,11 @@ int main() {
 		snprintf(fps_str, 30, "FPS: %f", 1 / GetFrameTime()); 
 		snprintf(counter_txt, 20, "Clicks: %d", click_counter);
 		snprintf(counter_manastones, 20, "Mana Stones: %d", mana_stones);
+		snprintf(counter_money, 20, "MONEY: $%d", money);
 		DrawText(fps_str, 10, 10, 20, DARKGRAY); //Draw FPS Counter
 		DrawText(counter_txt, 10, 50, 20, DARKGRAY); //Draw Click Counter
 		DrawText(counter_manastones, 10, 70, 20, DARKBLUE); //Draw Mana Stone Counter
+		DrawText(counter_money, 10, 90, 20, DARKGRAY);
 
 		
 
