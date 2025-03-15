@@ -76,7 +76,7 @@ int main() {
 		} else {
 			DrawRectangleRounded(tradeButton, 0.2f, 10, GRAY);
 		}
-		DrawText("TRADE", 350, 265, 20, BLACK);
+		DrawText("TRADE", 360, 265, 20, BLACK);
 		//stock trade end
 
 		if (CheckCollisionPointRec(mouse_pos, clicker_rect)) { //TODO: HANDLE CLICK, HOVER, and NEITHER CASES
