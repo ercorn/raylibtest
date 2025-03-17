@@ -22,6 +22,8 @@ int main() {
 
 	SetTargetFPS(60); // Cap/Limit FPS
 
+	srand((int)GetTime());
+
 	Rectangle clicker_rect = (Rectangle) { .height = 50, .width = 100, .x = screen_width - 110, .y = screen_height - 60};
 	Rectangle manastone_rect = (Rectangle) {.height = 50, .width = 100, .x = screen_width - 110, .y = screen_height - 120};
 	Rectangle tradeButton = {300, 250, 200, 50}; //stock trading button
@@ -32,7 +34,9 @@ int main() {
 	int click_counter = 0;
 	int mana_stonecost = 25;
 	int mana_stones = 0;
-	int money = 0;
+	int money = 100;
+	int max_click_profit = 20;
+	int min_click_profit = -5;
 	//float second_timer = 0;
 	double old_time = GetTime();
 
@@ -71,7 +75,7 @@ int main() {
 		if (CheckCollisionPointRec(mouse_pos, tradeButton)) {
 			DrawRectangleRounded(tradeButton, 0.2f, 10, LIGHTGRAY);
 			if (IsMouseButtonPressed(MOUSE_BUTTON_LEFT)) {
-				money += 10;
+				money += (rand() % (max_click_profit - min_click_profit + 1)) + min_click_profit;
 			}
 		} else {
 			DrawRectangleRounded(tradeButton, 0.2f, 10, GRAY);
