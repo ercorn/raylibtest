@@ -55,7 +55,7 @@ int main() {
 		double current_time = GetTime();
 		if (mana_stones >=1) {
 			if (current_time - old_time >= 1.0) { //if a second has passed
-				click_counter += mana_stones;
+				money += mana_stones * 5; //placeholder for buying passive investments
 				old_time = current_time;
 			}
 		}
@@ -108,8 +108,10 @@ int main() {
 			} else {									   //if hovering but not clicked/held
 				DrawRectangleRec(manastone_rect, LIGHTGRAY);
 			}
+			DrawText("INVEST",  screen_width - 100, screen_height - 100, 20, BLACK);
 		} else if (click_counter >= mana_stonecost) {
 			DrawRectangleRec(manastone_rect, DARKGRAY);			   //mouse not over rectangle at all
+			DrawText("INVEST",  screen_width - 100, screen_height - 100, 20, BLACK);
 		}
 
 		snprintf(fps_str, 30, "FPS: %f", 1 / GetFrameTime()); 
