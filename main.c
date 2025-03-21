@@ -13,6 +13,15 @@
 			39 manastones = 39 clicks/sec
 */
 
+#define MAX_STOCKS 3
+
+typedef struct {
+	char *name;
+	int cost;
+	int income_per_sec;
+	int owned;
+} Stock;
+
 int main() {
 	//init window
 	const int screen_width = 800;
