@@ -22,6 +22,60 @@ typedef struct {
 	int owned;
 } Stock;
 
+Stock stocks[MAX_STOCKS] = {
+	{"Tech Co", 100, 5, 0},
+	{"Auto Inc", 250, 15, 0},
+	{"Bank Corp", 500, 30, 0}
+};
+
+int click_counter = 0;
+int mana_stonecost = 25;
+int mana_stones = 0;
+int money = 1000;
+int passive_income = 0;
+int max_click_profit = 20;
+int min_click_profit = -5;
+float timer = 0.0;
+
+void UpdateGame(float deltaTime) {
+	timer += deltaTime;
+	if (timer >= 1.0) {
+		money += passive_income;
+		timer = 0.0;
+	}
+}
+
+void DrawStockMarket() {
+	int x = 50; //starting pos x, y for stock listings
+	int y = 100;
+
+	DrawText("Stock Market", x, y - 30, 20, GOLD);
+
+	for (int i = 0; i < MAX_STOCKS; i++) {
+		char stockInfo[100];
+		snprintf(stockInfo, 100, "%s - $%d | +$%d/sec | Owned: %d",
+			     stocks[i].name, stocks[i].cost, stocks[i].income_per_sec, stocks[i].owned);
+		
+		DrawText(stockInfo, x, y, 20, WHITE);
+
+		//Draw Buy Button
+		Rectangle buyButton = {x + 300, y, 80, 30};
+		DrawRectangleRec(buyButton, DARKGRAY);
+		DrawText("BUY", x + 320, y + 5, 20, WHITE);
+
+		//Check click
+		if (CheckCollisionPointRec(GetMousePosition(), buyButton) && IsMouseButtonPressed(MOUSE_BUTTON_LEFT)) {
+			if (money >= stocks[i].cost) {
+				money -= stocks[i].cost;
+				stocks[i].owned++;
+				passive_income += stocks[i].income_per_sec;
+			}
+		}
+
+		y += 40; //Next stock gets drawn lower down
+	}
+}
+
 int main() {
 	//init window
 	const int screen_width = 800;
@@ -40,13 +94,7 @@ int main() {
 	char *counter_txt = malloc(20 * sizeof(char));
 	char *counter_manastones = malloc(20 * sizeof(char));
 	char *counter_money = malloc(20 * sizeof(char));
-	int click_counter = 0;
-	int mana_stonecost = 25;
-	int mana_stones = 0;
-	int money = 100;
-	int max_click_profit = 20;
-	int min_click_profit = -5;
-	//float second_timer = 0;
+
 	double old_time = GetTime();
 
 	//def camera
@@ -59,6 +107,16 @@ int main() {
 
 	//run window
 	while(!WindowShouldClose()) {
+
+		//ESC to close window
+		if (IsKeyPressed(KEY_Q) && IsKeyPressed(KEY_LEFT_SHIFT)) {
+			break;
+		}
+
+		float deltaTime = GetFrameTime();
+		UpdateGame(deltaTime);
+
+
 		Vector2 mouse_pos = GetMousePosition();
 		
 		double current_time = GetTime();
@@ -140,6 +198,8 @@ int main() {
 		if (IsKeyDown(KEY_RIGHT)) {
 			DrawCircle(screen_width, screen_height / 2, 50, BLACK);
 		}
+
+		DrawStockMarket(); //Draw stock listings
 
 		EndDrawing();
 	}
