@@ -13,7 +13,7 @@
 			39 manastones = 39 clicks/sec
 */
 
-#define MAX_STOCKS 3
+#define MAX_STOCKS 5
 
 typedef struct {
 	char *name;
@@ -25,7 +25,9 @@ typedef struct {
 Stock stocks[MAX_STOCKS] = {
 	{"Tech Co", 100, 5, 0},
 	{"Auto Inc", 250, 15, 0},
-	{"Bank Corp", 500, 30, 0}
+	{"Bank Corp", 500, 30, 0},
+	{"Textio", 750, 45, 0},
+	{"Boot.dev", 1000, 60, 0}
 };
 
 int click_counter = 0;
@@ -46,8 +48,8 @@ void UpdateGame(float deltaTime) {
 }
 
 void DrawStockMarket() {
-	int x = 50; //starting pos x, y for stock listings
-	int y = 100;
+	int x = 10; //starting pos x, y for stock listings
+	int y = 70;
 
 	DrawText("Stock Market", x, y - 30, 20, GOLD);
 
@@ -59,9 +61,9 @@ void DrawStockMarket() {
 		DrawText(stockInfo, x, y, 20, WHITE);
 
 		//Draw Buy Button
-		Rectangle buyButton = {x + 300, y, 80, 30};
+		Rectangle buyButton = {x + 410, y - 5, 80, 30};
 		DrawRectangleRec(buyButton, DARKGRAY);
-		DrawText("BUY", x + 320, y + 5, 20, WHITE);
+		DrawText("BUY", x + 430, y + 5, 20, WHITE);
 
 		//Check click
 		if (CheckCollisionPointRec(GetMousePosition(), buyButton) && IsMouseButtonPressed(MOUSE_BUTTON_LEFT)) {
@@ -87,23 +89,15 @@ int main() {
 
 	srand((int)GetTime());
 
-	Rectangle clicker_rect = (Rectangle) { .height = 50, .width = 100, .x = screen_width - 110, .y = screen_height - 60};
-	Rectangle manastone_rect = (Rectangle) {.height = 50, .width = 100, .x = screen_width - 110, .y = screen_height - 120};
-	Rectangle tradeButton = {300, 250, 200, 50}; //stock trading button
+	//Rectangle clicker_rect = (Rectangle) { .height = 50, .width = 100, .x = screen_width - 110, .y = screen_height - 60};
+	//Rectangle manastone_rect = (Rectangle) {.height = 50, .width = 100, .x = screen_width - 110, .y = screen_height - 120};
+	Rectangle tradeButton = {300, 300, 200, 50}; //stock trading button
 	char *fps_str = malloc(30 * sizeof(char));
-	char *counter_txt = malloc(20 * sizeof(char));
-	char *counter_manastones = malloc(20 * sizeof(char));
-	char *counter_money = malloc(20 * sizeof(char));
+	//char *counter_txt = malloc(20 * sizeof(char));
+	//char *counter_manastones = malloc(20 * sizeof(char));
+	//char *counter_money = malloc(20 * sizeof(char));
 
 	double old_time = GetTime();
-
-	//def camera
-	Camera3D camera = {0};
-	camera.position = (Vector3){10.0f, 10.0f, 10.0f};
-	camera.target = (Vector3){0.0f, 0.0f, 0.0f};
-	camera.up = (Vector3){0.0f, 1.0f, 0.0f};
-	camera.fovy = 45.0f;
-	camera.projection = CAMERA_PERSPECTIVE;
 
 	//run window
 	while(!WindowShouldClose()) {
@@ -119,24 +113,11 @@ int main() {
 
 		Vector2 mouse_pos = GetMousePosition();
 		
-		double current_time = GetTime();
-		if (mana_stones >=1) {
-			if (current_time - old_time >= 1.0) { //if a second has passed
-				money += mana_stones * 5; //placeholder for buying passive investments
-				old_time = current_time;
-			}
-		}
+		//double current_time = GetTime();
 
 		BeginDrawing();
-		UpdateCamera(&camera, CAMERA_ORBITAL);
 		//draw stuff
 		ClearBackground(SKYBLUE);
-
-		BeginMode3D(camera);
-
-		DrawSphere((Vector3){0.0f, 0.0f, 0.0f}, 2.0f, BLACK);
-
-		EndMode3D();
 
 		//stock trade start
 		if (CheckCollisionPointRec(mouse_pos, tradeButton)) {
@@ -147,48 +128,11 @@ int main() {
 		} else {
 			DrawRectangleRounded(tradeButton, 0.2f, 10, GRAY);
 		}
-		DrawText("TRADE", 360, 265, 20, BLACK);
+		DrawText("TRADE", 360, 310, 20, BLACK);
 		//stock trade end
 
-		if (CheckCollisionPointRec(mouse_pos, clicker_rect)) { //TODO: HANDLE CLICK, HOVER, and NEITHER CASES
-			if (IsMouseButtonPressed(MOUSE_BUTTON_LEFT)) { //check mouse left click
-				click_counter++;
-			}
-			if (IsMouseButtonDown(MOUSE_LEFT_BUTTON)) {    //check if still held
-				DrawRectangleRec(clicker_rect, RED);
-			} else {									   //if hovering but not clicked/held
-				DrawRectangleRec(clicker_rect, LIGHTGRAY);
-			}
-		} else {
-			DrawRectangleRec(clicker_rect, DARKGRAY);			   //mouse not over rectangle at all
-		}
-
-		if ((click_counter >=  mana_stonecost) && CheckCollisionPointRec(mouse_pos, manastone_rect)) { //DRAW MANA STONE BUY BUTTON
-			if (IsMouseButtonPressed(MOUSE_BUTTON_LEFT)) { //check mouse left click
-				if (click_counter >= mana_stonecost) { //manastone buy check
-					click_counter -= mana_stonecost;
-					mana_stones++;
-				}
-			}
-			if (IsMouseButtonDown(MOUSE_LEFT_BUTTON)) {    //check if still held
-				DrawRectangleRec(manastone_rect, RED);
-			} else {									   //if hovering but not clicked/held
-				DrawRectangleRec(manastone_rect, LIGHTGRAY);
-			}
-			DrawText("INVEST",  screen_width - 100, screen_height - 100, 20, BLACK);
-		} else if (click_counter >= mana_stonecost) {
-			DrawRectangleRec(manastone_rect, DARKGRAY);			   //mouse not over rectangle at all
-			DrawText("INVEST",  screen_width - 100, screen_height - 100, 20, BLACK);
-		}
-
-		snprintf(fps_str, 30, "FPS: %f", 1 / GetFrameTime()); 
-		snprintf(counter_txt, 20, "Clicks: %d", click_counter);
-		snprintf(counter_manastones, 20, "Mana Stones: %d", mana_stones);
-		snprintf(counter_money, 20, "MONEY: $%d", money);
+		snprintf(fps_str, 30, "FPS: %.3f", 1 / GetFrameTime()); 
 		DrawText(fps_str, 10, 10, 20, DARKGRAY); //Draw FPS Counter
-		DrawText(counter_txt, 10, 50, 20, DARKGRAY); //Draw Click Counter
-		DrawText(counter_manastones, 10, 70, 20, DARKBLUE); //Draw Mana Stone Counter
-		DrawText(counter_money, 10, 90, 20, DARKGRAY);
 
 		
 
@@ -204,8 +148,9 @@ int main() {
 		EndDrawing();
 	}
 	free(fps_str);
-	free(counter_txt);
-	free(counter_manastones);
+	//free(counter_txt);
+	//free(counter_manastones);
+
 	//close window
 	CloseWindow();
 
