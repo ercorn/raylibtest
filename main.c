@@ -13,21 +13,26 @@
 			39 manastones = 39 clicks/sec
 */
 
+void UpdateStockPrices(void);
+void UpdateGame(float);
+void DrawStockPrices(void);
+
 #define MAX_STOCKS 5
 
 typedef struct {
 	char *name;
-	int cost;
+	int base_cost;
+	int price;
 	int income_per_sec;
 	int owned;
 } Stock;
 
 Stock stocks[MAX_STOCKS] = {
-	{"Tech Co", 100, 5, 0},
-	{"Auto Inc", 250, 15, 0},
-	{"Bank Corp", 500, 30, 0},
-	{"Textio", 750, 45, 0},
-	{"Boot.dev", 1000, 60, 0}
+	{"Tech Co", 100, 100, 5, 0},
+	{"Auto Inc", 250, 250, 15, 0},
+	{"Bank Corp", 500, 500, 30, 0},
+	{"Textio", 750, 750, 45, 0},
+	{"Boot.dev", 1000, 1000, 60, 0}
 };
 
 int click_counter = 0;
@@ -38,27 +43,65 @@ int passive_income = 0;
 int max_click_profit = 20;
 int min_click_profit = -5;
 float timer = 0.0;
+float price_update_timer = 0.0;
 
 void UpdateGame(float deltaTime) {
 	timer += deltaTime;
+	price_update_timer += deltaTime;
+
 	if (timer >= 1.0) {
 		money += passive_income;
 		timer = 0.0;
+	}
+
+	if (price_update_timer >= 5.0) {
+		UpdateStockPrices();
+		price_update_timer = 0.0;
+	}
+}
+
+void UpdateStockPrices() {
+	for (int i = 0; i < MAX_STOCKS; i++) {
+		//fluctuate stock price
+		int flux = (rand() % 21) - 10;
+		int price_change = (stocks[i].base_cost * flux) / 100;
+
+		//small % chance of major event maybe? 
+		//...
+
+		stocks[i].price += price_change;
+
+		//clamp price to make sure it doesn't drop too low
+		if (stocks[i].price < (stocks[i].base_cost * 0.75)) {
+			stocks[i].price = stocks[i].base_cost * 0.75;
+		}
+
+		//clamp price to make sure it doesn't get too high
+		if (stocks[i].price > (stocks[i].base_cost * 1.25)) {
+			stocks[i].price = stocks[i].base_cost * 1.25;
+		}
 	}
 }
 
 void DrawStockMarket() {
 	int x = 10; //starting pos x, y for stock listings
 	int y = 70;
-
-	DrawText("Stock Market", x, y - 30, 20, GOLD);
+	char stock_title[100];
+	snprintf(stock_title, 100, "Stock Market - Money: $%d", money);
+	DrawText(stock_title, x, y - 30, 20, GOLD);
 
 	for (int i = 0; i < MAX_STOCKS; i++) {
 		char stockInfo[100];
+		Color price_color;
+		if (stocks[i].price >= stocks[i].base_cost) { //stock price is green if above base cost
+			price_color = GREEN;
+		} else {
+			price_color = RED; //red if below base cost
+		}
 		snprintf(stockInfo, 100, "%s - $%d | +$%d/sec | Owned: %d",
-			     stocks[i].name, stocks[i].cost, stocks[i].income_per_sec, stocks[i].owned);
+			     stocks[i].name, stocks[i].price, stocks[i].income_per_sec, stocks[i].owned);
 		
-		DrawText(stockInfo, x, y, 20, WHITE);
+		DrawText(stockInfo, x, y, 20, price_color);
 
 		//Draw Buy Button
 		Rectangle buyButton = {x + 410, y - 5, 80, 30};
@@ -67,8 +110,8 @@ void DrawStockMarket() {
 
 		//Check click
 		if (CheckCollisionPointRec(GetMousePosition(), buyButton) && IsMouseButtonPressed(MOUSE_BUTTON_LEFT)) {
-			if (money >= stocks[i].cost) {
-				money -= stocks[i].cost;
+			if (money >= stocks[i].price) {
+				money -= stocks[i].price;
 				stocks[i].owned++;
 				passive_income += stocks[i].income_per_sec;
 			}
@@ -117,7 +160,7 @@ int main() {
 
 		BeginDrawing();
 		//draw stuff
-		ClearBackground(SKYBLUE);
+		ClearBackground(BLACK);
 
 		//stock trade start
 		if (CheckCollisionPointRec(mouse_pos, tradeButton)) {
