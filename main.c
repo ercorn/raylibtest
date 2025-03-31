@@ -1,6 +1,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <raylib.h>
+#include <string.h>
 
 /*
 	TODO: GOING WITH STOCK TRADING GAME. Plans in gpt. general idea is stock trading clicker where the end goal is to retire rich.
@@ -15,9 +16,11 @@
 
 void UpdateStockPrices(void);
 void UpdateGame(float);
-void DrawStockPrices(void);
+void DrawStockMarket(void);
+void AddTickerMessage(const char *message, Color color);
 
 #define MAX_STOCKS 5
+#define MAX_TICKER_MESSAGES 5
 
 typedef struct {
 	char *name;
@@ -35,6 +38,14 @@ Stock stocks[MAX_STOCKS] = {
 	{"Boot.dev", 1000, 1000, 60, 0}
 };
 
+typedef struct {
+	char message[100];
+	Color color;
+} TickerMessage;
+
+TickerMessage ticker_messages[MAX_TICKER_MESSAGES];
+
+int ticker_x = 800; //ticker starting x position
 int click_counter = 0;
 int mana_stonecost = 25;
 int mana_stones = 0;
@@ -119,6 +130,16 @@ void DrawStockMarket() {
 
 		y += 40; //Next stock gets drawn lower down
 	}
+}
+
+void AddTickerMessage(const char *message, Color color) {
+	//shift existing messages over to open up space for the new one
+	for (int i = MAX_TICKER_MESSAGES - 1; i > 0; i--) { //starting from the end
+		ticker_messages[i] = ticker_messages[i - 1];
+	}
+	//add new message to beginning
+	strncpy(ticker_messages[0].message, message, sizeof(ticker_messages[0].message));
+	ticker_messages[0].color = color;
 }
 
 int main() {
