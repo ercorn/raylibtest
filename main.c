@@ -91,6 +91,12 @@ void UpdateStockPrices() {
 		if (stocks[i].price > (stocks[i].base_cost * 1.25)) {
 			stocks[i].price = stocks[i].base_cost * 1.25;
 		}
+
+		//add to ticker
+		char message[100];
+		snprintf(message, 100, "%s price %s by $%d", stocks[i].name, (price_change >= 0) ? "up" : "down", abs(price_change));
+		Color message_color = (price_change >= 0) ? GREEN : RED;
+		AddTickerMessage(message, message_color);
 	}
 }
 
@@ -142,6 +148,21 @@ void AddTickerMessage(const char *message, Color color) {
 	ticker_messages[0].color = color;
 }
 
+void DrawStockTicker() {
+	int y = 20;
+	ticker_x -= 2;
+
+	//reset ticker pos when text goes off screen
+	if (ticker_x < -800) {
+		ticker_x = 800;
+	}
+
+	for (int i = 0;i < MAX_TICKER_MESSAGES; i++) {
+		if(strlen(ticker_messages[i].message) > 0) {
+			DrawText(ticker_messages[i].message, ticker_x + i * 200, y, 20, ticker_messages[i].color);
+		}
+	}
+}
 int main() {
 	//init window
 	const int screen_width = 800;
@@ -207,6 +228,7 @@ int main() {
 			DrawCircle(screen_width, screen_height / 2, 50, BLACK);
 		}
 
+		DrawStockTicker();
 		DrawStockMarket(); //Draw stock listings
 
 		EndDrawing();
