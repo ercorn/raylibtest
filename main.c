@@ -21,6 +21,7 @@ void AddTickerMessage(const char *message, Color color);
 
 #define MAX_STOCKS 5
 #define MAX_TICKER_MESSAGES 5
+#define GOAL_MONEY 10000
 
 typedef struct {
 	char *name;
@@ -31,11 +32,11 @@ typedef struct {
 } Stock;
 
 Stock stocks[MAX_STOCKS] = {
-	{"Tech Co", 100, 100, 5, 0},
-	{"Auto Inc", 250, 250, 15, 0},
-	{"Bank Corp", 500, 500, 30, 0},
-	{"Textio", 750, 750, 45, 0},
-	{"Boot.dev", 1000, 1000, 60, 0}
+	{"Tech Co", 100, 0, 5, 0},
+	{"Auto Inc", 250, 0, 15, 0},
+	{"Bank Corp", 500, 0, 30, 0},
+	{"Textio", 750, 0, 45, 0},
+	{"Boot.dev", 1000, 0, 60, 0}
 };
 
 typedef struct {
@@ -92,6 +93,10 @@ void UpdateStockPrices() {
 			stocks[i].price = stocks[i].base_cost * 1.25;
 		}
 
+		if (rand() % 100 < 50) { //% chance to have a massive event
+			stocks[i].price *= 5;
+		}
+
 		//add to ticker
 		char message[100];
 		snprintf(message, 100, "%s price %s by $%d", stocks[i].name, (price_change >= 0) ? "up" : "down", abs(price_change));
@@ -117,7 +122,7 @@ void DrawStockMarket() {
 		}
 		snprintf(stockInfo, 100, "%s - $%d | +$%d/sec | Owned: %d",
 			     stocks[i].name, stocks[i].price, stocks[i].income_per_sec, stocks[i].owned);
-		
+		DrawRectangle(x - 10, y - 10, 505, 40, Fade(DARKGRAY, 0.5f));
 		DrawText(stockInfo, x, y, 20, price_color);
 
 		//Draw Buy Button
@@ -153,13 +158,13 @@ void DrawStockTicker() {
 	ticker_x -= 2;
 
 	//reset ticker pos when text goes off screen
-	if (ticker_x < -800) {
+	if (ticker_x < -1000) {
 		ticker_x = 800;
 	}
 
 	for (int i = 0;i < MAX_TICKER_MESSAGES; i++) {
 		if(strlen(ticker_messages[i].message) > 0) {
-			DrawText(ticker_messages[i].message, ticker_x + i * 200, y, 20, ticker_messages[i].color);
+			DrawText(ticker_messages[i].message, ticker_x + i * 325, y, 20, ticker_messages[i].color);
 		}
 	}
 }
@@ -230,6 +235,10 @@ int main() {
 
 		DrawStockTicker();
 		DrawStockMarket(); //Draw stock listings
+
+		if (money >= GOAL_MONEY) {
+			DrawText("You became a millionaire!", 100, 300, 50, GOLD);
+		}
 
 		EndDrawing();
 	}
