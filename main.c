@@ -2,11 +2,13 @@
 #include <stdlib.h>
 #include <raylib.h>
 #include <string.h>
+#include <stdbool.h>
 
 /*
+	TODO: Add ability to sell stocks and split money into net worth and actual money.
+		-money => net worth
+		-money <= actual money based on stocks sold and starting deposit(currently 1000)
 	TODO: GOING WITH STOCK TRADING GAME. Plans in gpt. general idea is stock trading clicker where the end goal is to retire rich.
-	TODO: Decide direction for the game. Current idea is to load some 3d and have resources gained from the clicker effect it kind of like growing
-	an egg or something.
 	DONE: Figure out how to have a variable autoincrement every second. The current plan is to have each manastone autoincrement the click_counter
 	by the total number of manastones every second.
 		ex: 1 manastone   = 1  clicks/sec
@@ -21,7 +23,7 @@ void AddTickerMessage(const char *message, Color color);
 
 #define MAX_STOCKS 5
 #define MAX_TICKER_MESSAGES 5
-#define GOAL_MONEY 10000
+#define GOAL_MONEY 1000000
 
 typedef struct {
 	char *name;
@@ -56,6 +58,7 @@ int max_click_profit = 20;
 int min_click_profit = -5;
 float timer = 0.0;
 float price_update_timer = 0.0;
+bool game_already_running = false;
 
 void UpdateGame(float deltaTime) {
 	timer += deltaTime;
@@ -64,6 +67,11 @@ void UpdateGame(float deltaTime) {
 	if (timer >= 1.0) {
 		money += passive_income;
 		timer = 0.0;
+	}
+
+	if (!game_already_running) {
+		UpdateStockPrices();
+		game_already_running = true;
 	}
 
 	if (price_update_timer >= 5.0) {
@@ -88,14 +96,18 @@ void UpdateStockPrices() {
 			stocks[i].price = stocks[i].base_cost * 0.75;
 		}
 
-		//clamp price to make sure it doesn't get too high
+		/*//clamp price to make sure it doesn't get too high
 		if (stocks[i].price > (stocks[i].base_cost * 1.25)) {
 			stocks[i].price = stocks[i].base_cost * 1.25;
 		}
-
+		*/
 		if (rand() % 100 < 50) { //% chance to have a massive event
-			stocks[i].price *= 5;
+			stocks[i].price *= 4;
 		}
+		if (rand() % 100 < 50) {
+			stocks[i].price /= 2;
+		}
+		stocks[i].income_per_sec = (int)(stocks[i].price * 0.1);
 
 		//add to ticker
 		char message[100];
