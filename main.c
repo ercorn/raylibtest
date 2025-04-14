@@ -53,6 +53,7 @@ int click_counter = 0;
 int mana_stonecost = 25;
 int mana_stones = 0;
 int money = 1000;
+int net_worth = 1000;
 int passive_income = 0;
 int max_click_profit = 20;
 int min_click_profit = -5;
@@ -123,6 +124,7 @@ void DrawStockMarket() {
 	char stock_title[100];
 	snprintf(stock_title, 100, "Stock Market - Money: $%d", money);
 	DrawText(stock_title, x, y - 30, 20, GOLD);
+	DrawRectangle(x - 10, y - 10, 605, 40 * MAX_STOCKS, Fade(DARKGRAY, 0.5f));
 
 	for (int i = 0; i < MAX_STOCKS; i++) {
 		char stockInfo[100];
@@ -134,20 +136,31 @@ void DrawStockMarket() {
 		}
 		snprintf(stockInfo, 100, "%s - $%d | +$%d/sec | Owned: %d",
 			     stocks[i].name, stocks[i].price, stocks[i].income_per_sec, stocks[i].owned);
-		DrawRectangle(x - 10, y - 10, 505, 40, Fade(DARKGRAY, 0.5f));
 		DrawText(stockInfo, x, y, 20, price_color);
 
 		//Draw Buy Button
 		Rectangle buyButton = {x + 410, y - 5, 80, 30};
 		DrawRectangleRec(buyButton, DARKGRAY);
 		DrawText("BUY", x + 430, y + 5, 20, WHITE);
+		//Draw Sell Button
+		Rectangle sellButton = {x + 510, y - 5, 80, 30};
+		DrawRectangleRec(sellButton, DARKGRAY);
+		DrawText("SELL", x + 530, y + 5, 20, WHITE);
 
-		//Check click
+		//Check buy button click
 		if (CheckCollisionPointRec(GetMousePosition(), buyButton) && IsMouseButtonPressed(MOUSE_BUTTON_LEFT)) {
 			if (money >= stocks[i].price) {
 				money -= stocks[i].price;
 				stocks[i].owned++;
 				passive_income += stocks[i].income_per_sec;
+			}
+		}
+		//Check sell button click
+		if (CheckCollisionPointRec(GetMousePosition(), sellButton) && IsMouseButtonPressed(MOUSE_BUTTON_LEFT)) {
+			if (stocks[i].owned >= 1) {
+				stocks[i].owned -= 1;
+				money += stocks[i].price;
+				passive_income -= stocks[i].income_per_sec;
 			}
 		}
 
