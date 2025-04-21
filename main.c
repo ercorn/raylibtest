@@ -102,7 +102,7 @@ void UpdateStockPrices() {
 			stocks[i].price = stocks[i].base_cost * 1.25;
 		}
 		*/
-		if (rand() % 100 < 50) { //% chance to have a massive event
+		if (rand() % 100 < 10) { //% chance to have a massive event
 			stocks[i].price *= 4;
 		}
 		if (rand() % 100 < 50) {
@@ -122,7 +122,7 @@ void DrawStockMarket() {
 	int x = 10; //starting pos x, y for stock listings
 	int y = 70;
 	char stock_title[100];
-	snprintf(stock_title, 100, "Stock Market - Money: $%d", money);
+	snprintf(stock_title, 100, "Stock Market - Money: $%d Net Worth: $%d", money, net_worth);
 	DrawText(stock_title, x, y - 30, 20, GOLD);
 	DrawRectangle(x - 10, y - 10, 605, 40 * MAX_STOCKS, Fade(DARKGRAY, 0.5f));
 
@@ -152,7 +152,7 @@ void DrawStockMarket() {
 			if (money >= stocks[i].price) {
 				money -= stocks[i].price;
 				stocks[i].owned++;
-				passive_income += stocks[i].income_per_sec;
+				//passive_income += stocks[i].income_per_sec;
 			}
 		}
 		//Check sell button click
@@ -160,12 +160,20 @@ void DrawStockMarket() {
 			if (stocks[i].owned >= 1) {
 				stocks[i].owned -= 1;
 				money += stocks[i].price;
-				passive_income -= stocks[i].income_per_sec;
+				//passive_income -= stocks[i].income_per_sec;
 			}
 		}
 
 		y += 40; //Next stock gets drawn lower down
 	}
+	int new_passive_income = 0;
+	int new_net_worth = 0;
+	for (int i = 0; i < MAX_STOCKS; i++) {
+		new_passive_income += stocks[i].income_per_sec * stocks[i].owned;
+		new_net_worth += stocks[i].price * stocks[i].owned;
+	}
+	passive_income = new_passive_income;
+	net_worth = new_net_worth + money;
 }
 
 void AddTickerMessage(const char *message, Color color) {
@@ -261,7 +269,7 @@ int main() {
 		DrawStockTicker();
 		DrawStockMarket(); //Draw stock listings
 
-		if (money >= GOAL_MONEY) {
+		if (net_worth >= GOAL_MONEY) {
 			DrawText("You became a millionaire!", 100, 300, 50, GOLD);
 		}
 
