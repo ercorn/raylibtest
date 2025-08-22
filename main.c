@@ -172,8 +172,11 @@ void DrawStockMarket() {
 		new_passive_income += stocks[i].income_per_sec * stocks[i].owned;
 		new_net_worth += stocks[i].price * stocks[i].owned;
 	}
-	passive_income = new_passive_income;
-	net_worth = new_net_worth + money;
+	if (net_worth < GOAL_MONEY) {
+		passive_income = new_passive_income;
+		net_worth = new_net_worth + money;
+	}
+
 }
 
 void AddTickerMessage(const char *message, Color color) {
