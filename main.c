@@ -125,6 +125,7 @@ void DrawStockMarket() {
 	snprintf(stock_title, 100, "Stock Market - Money: $%d Net Worth: $%d", money, net_worth);
 	DrawText(stock_title, x, y - 30, 20, GOLD);
 	DrawRectangle(x - 10, y - 10, 605, 40 * MAX_STOCKS, Fade(DARKGRAY, 0.5f));
+	Vector2 mouse_pos = GetMousePosition();
 
 	for (int i = 0; i < MAX_STOCKS; i++) {
 		char stockInfo[100];
@@ -140,11 +141,26 @@ void DrawStockMarket() {
 
 		//Draw Buy Button
 		Rectangle buyButton = {x + 410, y - 5, 80, 30};
-		DrawRectangleRec(buyButton, DARKGRAY);
+		
+		//change color if moused over
+		if (CheckCollisionPointRec(mouse_pos, buyButton)) {
+			DrawRectangleRec(buyButton, LIGHTGRAY);
+		} else {
+			DrawRectangleRec(buyButton, DARKGRAY);
+		}
+		
 		DrawText("BUY", x + 430, y + 5, 20, WHITE);
 		//Draw Sell Button
 		Rectangle sellButton = {x + 510, y - 5, 80, 30};
-		DrawRectangleRec(sellButton, DARKGRAY);
+		
+		//change color if moused over
+		if (CheckCollisionPointRec(mouse_pos, sellButton)) {
+			DrawRectangleRec(sellButton, LIGHTGRAY);
+		} else {
+			DrawRectangleRec(sellButton, DARKGRAY);
+		}
+
+
 		DrawText("SELL", x + 530, y + 5, 20, WHITE);
 
 		//Check buy button click
