@@ -102,7 +102,8 @@ void UpdateGame(Game_State *g_state, float deltaTime) {
 		g_state->price_update_timer = 0.0;
 	}
 
-	assert(g_state->price_update_timer >= 0.0 && g_state->timer >= 0.0 && "Timers should never be negative");
+	assert(g_state->price_update_timer >= 0.0 && "Price update timer should never be negative");
+	assert(g_state->timer >= 0.0 && "Timer should never be negative");
 }
 
 void UpdateStockPrices(Game_State *g_state) {
@@ -142,11 +143,13 @@ void UpdateStockPrices(Game_State *g_state) {
 		Color message_color = (price_change >= 0) ? GREEN : RED;
 		AddTickerMessage(g_state, message, message_color);
 
-		assert(g_state->stocks[i].price >= 0.0);
+		assert(g_state->stocks[i].price >= 0.0 && "stock prices should never be negative");
+		assert(g_state->stocks[i].owned >= 0 && "owned stocks cannot be negative");
 	}
 }
 
 void DrawStockMarket(Game_State *g_state) {
+	assert(g_state != NULL && "g_state should not be null");
 	int x = 10; // starting pos x, y for stock listings
 	int y = 70;
 	char stock_title[100];
@@ -215,13 +218,16 @@ void DrawStockMarket(Game_State *g_state) {
 
 		y += 40; // Next stock gets drawn lower down
 	}
+
 	int new_passive_income = 0;
 	int new_net_worth = 0;
+
 	for (int i = 0; i < MAX_STOCKS; i++) {
 		new_passive_income +=
 			g_state->stocks[i].income_per_sec * g_state->stocks[i].owned;
 		new_net_worth += g_state->stocks[i].price * g_state->stocks[i].owned;
 	}
+
 	if (g_state->net_worth < GOAL_MONEY) {
 		g_state->passive_income = new_passive_income;
 		g_state->net_worth = new_net_worth + g_state->money;
@@ -229,17 +235,19 @@ void DrawStockMarket(Game_State *g_state) {
 }
 
 void AddTickerMessage(Game_State *g_state, const char *message, Color color) {
+	assert(g_state != NULL && "g_state should not be null");
+	assert(message != NULL && "message should not be null");
 	// shift existing messages over to open up space for the new one
 	for (int i = MAX_TICKER_MESSAGES - 1; i > 0; i--) { // starting from the end
 		g_state->ticker_messages[i] = g_state->ticker_messages[i - 1];
 	}
 	// add new message to beginning
-	strncpy(g_state->ticker_messages[0].message, message,
-			sizeof(g_state->ticker_messages[0].message));
+	snprintf(g_state->ticker_messages[0].message, sizeof(g_state->ticker_messages[0].message), "%s", message);
 	g_state->ticker_messages[0].color = color;
 }
 
 void DrawStockTicker(Game_State *g_state) {
+	assert(g_state != NULL && "g_state should not be null");
 	int y = 20;
 	g_state->ticker_x -= 2;
 
