@@ -1,1 +1,5 @@
 main
+.agents
+compile_commands.json
+skills-lock.json
+.clang-format
