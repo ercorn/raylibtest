@@ -23,7 +23,7 @@
 #define GOAL_MONEY 1000000
 
 typedef struct {
-	char *name;
+	char name[16];
 	int base_cost;
 	int price;
 	int income_per_sec;
