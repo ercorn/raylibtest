@@ -283,7 +283,7 @@ int main() {
 	// (Rectangle) {.height = 50, .width = 100, .x = screen_width - 110, .y =
 	// screen_height - 120};
 	Rectangle tradeButton = {300, 300, 200, 50}; // stock trading button
-	char *fps_str = malloc(30 * sizeof(char));
+	char fps_str[32];
 	// char *counter_txt = malloc(20 * sizeof(char));
 	// char *counter_manastones = malloc(20 * sizeof(char));
 	// char *counter_money = malloc(20 * sizeof(char));
@@ -341,7 +341,6 @@ int main() {
 
 		EndDrawing();
 	}
-	free(fps_str);
 	// free(counter_txt);
 	// free(counter_manastones);
 
