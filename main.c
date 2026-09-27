@@ -60,7 +60,7 @@ int click_counter = 0;
 int mana_stonecost = 25;
 int mana_stones = 0;
 int max_click_profit = 20;
-int min_click_profit = -5;
+int min_click_profit = 1;
 
 bool game_already_running = false;
 
@@ -303,6 +303,12 @@ int main() {
 
 		Vector2 mouse_pos = GetMousePosition();
 
+		// check if over trade button and trade if clicked
+		if (CheckCollisionPointRec(mouse_pos, tradeButton) && IsMouseButtonPressed(MOUSE_BUTTON_LEFT)) {
+			g_state.money += (rand() % (max_click_profit - min_click_profit + 1)) + min_click_profit;
+			assert(g_state.money >= 0 && "money should never be negative");
+		}
+
 		// double current_time = GetTime();
 
 		BeginDrawing();
@@ -312,10 +318,6 @@ int main() {
 		// stock trade start
 		if (CheckCollisionPointRec(mouse_pos, tradeButton)) {
 			DrawRectangleRounded(tradeButton, 0.2f, 10, LIGHTGRAY);
-			if (IsMouseButtonPressed(MOUSE_BUTTON_LEFT)) {
-				g_state.money += (rand() % (max_click_profit - min_click_profit + 1)) +
-								 min_click_profit;
-			}
 		} else {
 			DrawRectangleRounded(tradeButton, 0.2f, 10, GRAY);
 		}
