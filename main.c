@@ -55,6 +55,9 @@ void UpdateStockPrices(Game_State *g_state);
 void DrawStockMarket(Game_State *g_state);
 void DrawStockTicker(Game_State *g_state);
 void AddTickerMessage(Game_State *g_state, const char *message, Color color);
+void UpdateStockMarket(Game_State *g_state);
+Rectangle GetBuyButtonRect(int stock_i);
+Rectangle GetSellButtonRect(int stock_i);
 
 int click_counter = 0;
 int mana_stonecost = 25;
@@ -102,6 +105,27 @@ void UpdateGame(Game_State *g_state, float deltaTime) {
 		g_state->price_update_timer = 0.0;
 	}
 
+	int new_passive_income = 0;
+	int new_net_worth = 0;
+
+	for (int i = 0; i < MAX_STOCKS; i++) {
+		new_passive_income +=
+			g_state->stocks[i].income_per_sec * g_state->stocks[i].owned;
+		new_net_worth += g_state->stocks[i].price * g_state->stocks[i].owned;
+	}
+
+	if (g_state->net_worth < GOAL_MONEY) {
+		g_state->passive_income = new_passive_income;
+		g_state->net_worth = new_net_worth + g_state->money;
+	}
+
+	// update stock ticker position
+	g_state->ticker_x -= 2;
+
+	// reset ticker x pos when text goes off screen
+	if (g_state->ticker_x < -1000)
+		g_state->ticker_x = 800;
+
 	assert(g_state->price_update_timer >= 0.0 && "Price update timer should never be negative");
 	assert(g_state->timer >= 0.0 && "Timer should never be negative");
 }
@@ -148,6 +172,47 @@ void UpdateStockPrices(Game_State *g_state) {
 	}
 }
 
+Rectangle GetBuyButtonRect(int stock_i) {
+	assert(stock_i >= 0 && stock_i < MAX_STOCKS);
+	int x = 10;
+	int y = 70 + (stock_i * 40);
+	return (Rectangle){x + 410, y - 5, 80, 30};
+}
+
+Rectangle GetSellButtonRect(int stock_i) {
+	assert(stock_i >= 0 && stock_i < MAX_STOCKS);
+	int x = 10;
+	int y = 70 + (stock_i * 40);
+	return (Rectangle){x + 510, y - 5, 80, 30};
+}
+
+void UpdateStockMarket(Game_State *g_state) {
+	assert(g_state != NULL && "g_state should not be null");
+	for (int i = 0; i < MAX_STOCKS; i++) {
+		// Check buy button click
+		if (CheckCollisionPointRec(GetMousePosition(), GetBuyButtonRect(i)) &&
+			IsMouseButtonPressed(MOUSE_BUTTON_LEFT)) {
+			if (g_state->money >= g_state->stocks[i].price) {
+				g_state->money -= g_state->stocks[i].price;
+				g_state->stocks[i].owned++;
+				// passive_income += stocks[i].income_per_sec;
+			}
+		}
+		assert(g_state->money >= 0 && "money cannot be negative");
+
+		// Check sell button click
+		if (CheckCollisionPointRec(GetMousePosition(), GetSellButtonRect(i)) &&
+			IsMouseButtonPressed(MOUSE_BUTTON_LEFT)) {
+			if (g_state->stocks[i].owned >= 1) {
+				g_state->stocks[i].owned -= 1;
+				g_state->money += g_state->stocks[i].price;
+				// passive_income -= stocks[i].income_per_sec;
+			}
+		}
+		assert(g_state->stocks[i].owned >= 0 && "owned stocks cannot be negative");
+	}
+}
+
 void DrawStockMarket(Game_State *g_state) {
 	assert(g_state != NULL && "g_state should not be null");
 	int x = 10; // starting pos x, y for stock listings
@@ -175,7 +240,7 @@ void DrawStockMarket(Game_State *g_state) {
 		DrawText(stockInfo, x, y, 20, price_color);
 
 		// Draw Buy Button
-		Rectangle buyButton = {x + 410, y - 5, 80, 30};
+		Rectangle buyButton = GetBuyButtonRect(i);
 
 		// change color if moused over
 		if (CheckCollisionPointRec(mouse_pos, buyButton)) {
@@ -186,7 +251,7 @@ void DrawStockMarket(Game_State *g_state) {
 
 		DrawText("BUY", x + 430, y + 5, 20, WHITE);
 		// Draw Sell Button
-		Rectangle sellButton = {x + 510, y - 5, 80, 30};
+		Rectangle sellButton = GetSellButtonRect(i);
 
 		// change color if moused over
 		if (CheckCollisionPointRec(mouse_pos, sellButton)) {
@@ -197,40 +262,7 @@ void DrawStockMarket(Game_State *g_state) {
 
 		DrawText("SELL", x + 530, y + 5, 20, WHITE);
 
-		// Check buy button click
-		if (CheckCollisionPointRec(GetMousePosition(), buyButton) &&
-			IsMouseButtonPressed(MOUSE_BUTTON_LEFT)) {
-			if (g_state->money >= g_state->stocks[i].price) {
-				g_state->money -= g_state->stocks[i].price;
-				g_state->stocks[i].owned++;
-				// passive_income += stocks[i].income_per_sec;
-			}
-		}
-		// Check sell button click
-		if (CheckCollisionPointRec(GetMousePosition(), sellButton) &&
-			IsMouseButtonPressed(MOUSE_BUTTON_LEFT)) {
-			if (g_state->stocks[i].owned >= 1) {
-				g_state->stocks[i].owned -= 1;
-				g_state->money += g_state->stocks[i].price;
-				// passive_income -= stocks[i].income_per_sec;
-			}
-		}
-
 		y += 40; // Next stock gets drawn lower down
-	}
-
-	int new_passive_income = 0;
-	int new_net_worth = 0;
-
-	for (int i = 0; i < MAX_STOCKS; i++) {
-		new_passive_income +=
-			g_state->stocks[i].income_per_sec * g_state->stocks[i].owned;
-		new_net_worth += g_state->stocks[i].price * g_state->stocks[i].owned;
-	}
-
-	if (g_state->net_worth < GOAL_MONEY) {
-		g_state->passive_income = new_passive_income;
-		g_state->net_worth = new_net_worth + g_state->money;
 	}
 }
 
@@ -249,12 +281,6 @@ void AddTickerMessage(Game_State *g_state, const char *message, Color color) {
 void DrawStockTicker(Game_State *g_state) {
 	assert(g_state != NULL && "g_state should not be null");
 	int y = 20;
-	g_state->ticker_x -= 2;
-
-	// reset ticker pos when text goes off screen
-	if (g_state->ticker_x < -1000) {
-		g_state->ticker_x = 800;
-	}
 
 	for (int i = 0; i < MAX_TICKER_MESSAGES; i++) {
 		if (strlen(g_state->ticker_messages[i].message) > 0) {
@@ -263,6 +289,7 @@ void DrawStockTicker(Game_State *g_state) {
 		}
 	}
 }
+
 int main() {
 	// init game state
 	Game_State g_state;
@@ -310,6 +337,7 @@ int main() {
 		}
 
 		// double current_time = GetTime();
+		UpdateStockMarket(&g_state);
 
 		BeginDrawing();
 		// draw stuff
