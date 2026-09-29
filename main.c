@@ -65,8 +65,6 @@ int mana_stones = 0;
 int max_click_profit = 20;
 int min_click_profit = 1;
 
-bool game_already_running = false;
-
 void game_init(Game_State *g_state) {
 	assert(g_state != NULL && "g_state should not be null");
 	memset(g_state, 0, sizeof(Game_State));
@@ -93,11 +91,6 @@ void UpdateGame(Game_State *g_state, float deltaTime) {
 	if (g_state->timer >= 1.0) {
 		g_state->money += g_state->passive_income;
 		g_state->timer = 0.0;
-	}
-
-	if (!game_already_running) {
-		UpdateStockPrices(g_state);
-		game_already_running = true;
 	}
 
 	if (g_state->price_update_timer >= 5.0) {
@@ -316,6 +309,8 @@ int main() {
 	// char *counter_money = malloc(20 * sizeof(char));
 
 	double old_time = GetTime();
+
+	UpdateStockPrices(&g_state);
 
 	// run window
 	while (!WindowShouldClose()) {
