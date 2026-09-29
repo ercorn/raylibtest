@@ -145,10 +145,10 @@ void UpdateStockPrices(Game_State *g_state) {
 						stocks[i].price = stocks[i].base_cost * 1.25;
 		}
 		*/
-		if (rand() % 100 < 10) { //% chance to have a massive event
+		int roll = rand() % 100;
+		if (roll < 10) { //% chance to have the event
 			g_state->stocks[i].price *= 4;
-		}
-		if (rand() % 100 < 50) {
+		} else if (roll < 50) {
 			g_state->stocks[i].price /= 2;
 		}
 		g_state->stocks[i].income_per_sec = (int)(g_state->stocks[i].price * 0.1);
