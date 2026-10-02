@@ -46,7 +46,8 @@ typedef struct {
 	TickerMessage ticker_messages[MAX_TICKER_MESSAGES];
 	int ticker_x; // ticker starting x position
 
-	// TODO: RNG state
+	// RNG state
+	unsigned int rng_seed;
 } Game_State;
 
 void game_init(Game_State *g_state);
@@ -81,6 +82,9 @@ void game_init(Game_State *g_state) {
 	g_state->stocks[2] = (Stock){"Bank Corp", 500, 500, 30, 0};
 	g_state->stocks[3] = (Stock){"Textio", 750, 750, 45, 0};
 	g_state->stocks[4] = (Stock){"Boot.dev", 1000, 1000, 60, 0};
+
+	// hardcode rng seed for now
+	g_state->rng_seed = 1337;
 }
 
 void UpdateGame(Game_State *g_state, float deltaTime) {
@@ -296,7 +300,7 @@ int main() {
 
 	SetTargetFPS(60); // Cap/Limit FPS
 
-	srand((int)GetTime());
+	srand(g_state.rng_seed);
 
 	// Rectangle clicker_rect = (Rectangle) { .height = 50, .width = 100, .x =
 	// screen_width - 110, .y = screen_height - 60}; Rectangle manastone_rect =
