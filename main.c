@@ -312,7 +312,7 @@ int main() {
 	// char *counter_manastones = malloc(20 * sizeof(char));
 	// char *counter_money = malloc(20 * sizeof(char));
 
-	double old_time = GetTime();
+	// double old_time = GetTime();
 
 	UpdateStockPrices(&g_state);
 
