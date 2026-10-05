@@ -4,3 +4,5 @@ compile_commands.json
 skills-lock.json
 .clang-format
 handoff.md
+save.tmp
+save.dat

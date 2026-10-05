@@ -36,6 +36,7 @@ typedef struct {
 } TickerMessage;
 
 typedef struct {
+	int version;
 	int money;
 	int net_worth;
 	int passive_income;
@@ -57,15 +58,39 @@ void DrawStockMarket(Game_State *g_state);
 void DrawStockTicker(Game_State *g_state);
 void AddTickerMessage(Game_State *g_state, const char *message, Color color);
 void UpdateStockMarket(Game_State *g_state);
+void SaveGame(Game_State *g_state);
+bool LoadGame(Game_State *g_state);
+
 Rectangle GetBuyButtonRect(int stock_i);
 Rectangle GetSellButtonRect(int stock_i);
 
 int max_click_profit = 20;
 int min_click_profit = 1;
 
+void SaveGame(Game_State *g_state) {
+	FILE *file = fopen("save.tmp", "wb");
+	fwrite(g_state, sizeof(Game_State), 1, file);
+	fclose(file);
+	rename("save.tmp", "save.dat");
+}
+
+bool LoadGame(Game_State *g_state) {
+	FILE *file = fopen("save.dat", "rb");
+	if (file == NULL)
+		return false;
+	fread(g_state, sizeof(Game_State), 1, file);
+	fclose(file);
+	if (g_state->version != 1)
+		printf("WRONG VERSION");
+
+	return true;
+}
+
 void game_init(Game_State *g_state) {
 	assert(g_state != NULL && "g_state should not be null");
 	memset(g_state, 0, sizeof(Game_State));
+
+	g_state->version = 1;
 
 	g_state->money = 1000;
 	g_state->net_worth = 1000;
@@ -301,6 +326,14 @@ int main() {
 		if (IsKeyPressed(KEY_Q) && IsKeyPressed(KEY_LEFT_SHIFT)) {
 			break;
 		}
+
+		// Save game
+		if (IsKeyPressed(KEY_S))
+			SaveGame(&g_state);
+
+		// Load game
+		if (IsKeyPressed(KEY_L))
+			LoadGame(&g_state);
 
 		float deltaTime = GetFrameTime();
 		UpdateGame(&g_state, deltaTime);
