@@ -60,9 +60,6 @@ void UpdateStockMarket(Game_State *g_state);
 Rectangle GetBuyButtonRect(int stock_i);
 Rectangle GetSellButtonRect(int stock_i);
 
-int click_counter = 0;
-int mana_stonecost = 25;
-int mana_stones = 0;
 int max_click_profit = 20;
 int min_click_profit = 1;
 
@@ -134,9 +131,6 @@ void UpdateStockPrices(Game_State *g_state) {
 		int flux = (rand() % 21) - 10;
 		int price_change = (g_state->stocks[i].base_cost * flux) / 100;
 
-		// small % chance of major event maybe?
-		//...
-
 		g_state->stocks[i].price += price_change;
 
 		// clamp price to make sure it doesn't drop too low
@@ -144,11 +138,6 @@ void UpdateStockPrices(Game_State *g_state) {
 			g_state->stocks[i].price = g_state->stocks[i].base_cost * 0.75;
 		}
 
-		/*//clamp price to make sure it doesn't get too high
-		if (stocks[i].price > (stocks[i].base_cost * 1.25)) {
-						stocks[i].price = stocks[i].base_cost * 1.25;
-		}
-		*/
 		int roll = rand() % 100;
 		if (roll < 10) { //% chance to have the event
 			g_state->stocks[i].price *= 4;
@@ -192,7 +181,6 @@ void UpdateStockMarket(Game_State *g_state) {
 			if (g_state->money >= g_state->stocks[i].price) {
 				g_state->money -= g_state->stocks[i].price;
 				g_state->stocks[i].owned++;
-				// passive_income += stocks[i].income_per_sec;
 			}
 		}
 		assert(g_state->money >= 0 && "money cannot be negative");
@@ -203,7 +191,6 @@ void UpdateStockMarket(Game_State *g_state) {
 			if (g_state->stocks[i].owned >= 1) {
 				g_state->stocks[i].owned -= 1;
 				g_state->money += g_state->stocks[i].price;
-				// passive_income -= stocks[i].income_per_sec;
 			}
 		}
 		assert(g_state->stocks[i].owned >= 0 && "owned stocks cannot be negative");
@@ -302,17 +289,8 @@ int main() {
 
 	srand(g_state.rng_seed);
 
-	// Rectangle clicker_rect = (Rectangle) { .height = 50, .width = 100, .x =
-	// screen_width - 110, .y = screen_height - 60}; Rectangle manastone_rect =
-	// (Rectangle) {.height = 50, .width = 100, .x = screen_width - 110, .y =
-	// screen_height - 120};
 	Rectangle tradeButton = {300, 300, 200, 50}; // stock trading button
 	char fps_str[32];
-	// char *counter_txt = malloc(20 * sizeof(char));
-	// char *counter_manastones = malloc(20 * sizeof(char));
-	// char *counter_money = malloc(20 * sizeof(char));
-
-	// double old_time = GetTime();
 
 	UpdateStockPrices(&g_state);
 
@@ -354,13 +332,6 @@ int main() {
 		snprintf(fps_str, 30, "FPS: %.3f", 1 / GetFrameTime());
 		DrawText(fps_str, 10, 10, 20, DARKGRAY); // Draw FPS Counter
 
-		if (IsKeyDown(KEY_LEFT)) {
-			DrawCircle(0, screen_height / 2, 50, BLACK);
-		}
-		if (IsKeyDown(KEY_RIGHT)) {
-			DrawCircle(screen_width, screen_height / 2, 50, BLACK);
-		}
-
 		DrawStockTicker(&g_state);
 		DrawStockMarket(&g_state); // Draw stock listings
 
@@ -370,8 +341,6 @@ int main() {
 
 		EndDrawing();
 	}
-	// free(counter_txt);
-	// free(counter_manastones);
 
 	// close window
 	CloseWindow();
