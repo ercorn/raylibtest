@@ -1,9 +1,11 @@
 #include <assert.h>
 #include <raylib.h>
 #include <stdbool.h>
+#include <stdint.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <sys/types.h>
 
 /*
 				TODO: Add ability to sell stocks and split Game_State.money into net
@@ -48,7 +50,7 @@ typedef struct {
 	int ticker_x; // ticker starting x position
 
 	// RNG state
-	unsigned int rng_seed;
+	uint32_t rng_state;
 } Game_State;
 
 void game_init(Game_State *g_state);
@@ -60,6 +62,15 @@ void AddTickerMessage(Game_State *g_state, const char *message, Color color);
 void UpdateStockMarket(Game_State *g_state);
 void SaveGame(Game_State *g_state);
 bool LoadGame(Game_State *g_state);
+uint32_t Xorshift32(uint32_t *state) {
+	uint32_t x = *state;
+	x ^= x << 13;
+	x ^= x >> 17;
+	x ^= x << 5;
+	*state = x;
+
+	return x;
+}
 
 Rectangle GetBuyButtonRect(int stock_i);
 Rectangle GetSellButtonRect(int stock_i);
@@ -105,8 +116,8 @@ void game_init(Game_State *g_state) {
 	g_state->stocks[3] = (Stock){"Textio", 750, 750, 45, 0};
 	g_state->stocks[4] = (Stock){"Boot.dev", 1000, 1000, 60, 0};
 
-	// hardcode rng seed for now
-	g_state->rng_seed = 1337;
+	// hardcode rng state for now
+	g_state->rng_state = 1337;
 }
 
 void UpdateGame(Game_State *g_state, float deltaTime) {
@@ -153,7 +164,7 @@ void UpdateStockPrices(Game_State *g_state) {
 	assert(g_state != NULL && "g_state should not be null");
 	for (int i = 0; i < MAX_STOCKS; i++) {
 		// fluctuate stock price
-		int flux = (rand() % 21) - 10;
+		int flux = ((int)Xorshift32(&g_state->rng_state) % 21) - 10;
 		int price_change = (g_state->stocks[i].base_cost * flux) / 100;
 
 		g_state->stocks[i].price += price_change;
@@ -163,7 +174,7 @@ void UpdateStockPrices(Game_State *g_state) {
 			g_state->stocks[i].price = g_state->stocks[i].base_cost * 0.75;
 		}
 
-		int roll = rand() % 100;
+		int roll = (int)Xorshift32(&g_state->rng_state) % 100;
 		if (roll < 10) { //% chance to have the event
 			g_state->stocks[i].price *= 4;
 		} else if (roll < 50) {
@@ -312,8 +323,6 @@ int main() {
 
 	SetTargetFPS(60); // Cap/Limit FPS
 
-	srand(g_state.rng_seed);
-
 	Rectangle tradeButton = {300, 300, 200, 50}; // stock trading button
 	char fps_str[32];
 
@@ -342,7 +351,7 @@ int main() {
 
 		// check if over trade button and trade if clicked
 		if (CheckCollisionPointRec(mouse_pos, tradeButton) && IsMouseButtonPressed(MOUSE_BUTTON_LEFT)) {
-			g_state.money += (rand() % (max_click_profit - min_click_profit + 1)) + min_click_profit;
+			g_state.money += ((int)Xorshift32(&g_state.rng_state) % (max_click_profit - min_click_profit + 1)) + min_click_profit;
 			assert(g_state.money >= 0 && "money should never be negative");
 		}
 
