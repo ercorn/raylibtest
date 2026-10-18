@@ -23,6 +23,8 @@
 #define MAX_STOCKS 5
 #define MAX_TICKER_MESSAGES 5
 #define GOAL_MONEY 1000000
+#define VERSION 3
+#define PRICE_HISTORY_COUNT 20
 
 typedef struct {
 	char name[16];
@@ -30,6 +32,9 @@ typedef struct {
 	int price;
 	int income_per_sec;
 	int owned;
+
+	int history[PRICE_HISTORY_COUNT];
+	int history_count;
 } Stock;
 
 typedef struct {
@@ -42,6 +47,8 @@ typedef struct {
 	int money;
 	int net_worth;
 	int passive_income;
+	int max_click_profit;
+	int min_click_profit;
 	float timer;
 	float price_update_timer;
 
@@ -60,8 +67,30 @@ void DrawStockMarket(Game_State *g_state);
 void DrawStockTicker(Game_State *g_state);
 void AddTickerMessage(Game_State *g_state, const char *message, Color color);
 void UpdateStockMarket(Game_State *g_state);
+Rectangle GetBuyButtonRect(int stock_i);
+Rectangle GetSellButtonRect(int stock_i);
 void SaveGame(Game_State *g_state);
 bool LoadGame(Game_State *g_state);
+void StockHistoryAdd(Stock *stock);
+
+void StockHistoryAdd(Stock *stock) {
+	assert(stock != NULL);
+	assert(stock->history_count <= PRICE_HISTORY_COUNT);
+	if (stock->history_count < PRICE_HISTORY_COUNT) {
+		stock->history[stock->history_count] = stock->price;
+		stock->history_count++;
+		return;
+	}
+
+	if (stock->history_count == PRICE_HISTORY_COUNT) {
+		for (int i = 1; i < PRICE_HISTORY_COUNT; i++) {
+			stock->history[i - 1] = stock->history[i];
+		}
+		stock->history[PRICE_HISTORY_COUNT - 1] = stock->price;
+		return;
+	}
+}
+
 uint32_t Xorshift32(uint32_t *state) {
 	uint32_t x = *state;
 	x ^= x << 13;
@@ -72,12 +101,6 @@ uint32_t Xorshift32(uint32_t *state) {
 	return x;
 }
 
-Rectangle GetBuyButtonRect(int stock_i);
-Rectangle GetSellButtonRect(int stock_i);
-
-int max_click_profit = 20;
-int min_click_profit = 1;
-
 void SaveGame(Game_State *g_state) {
 	FILE *file = fopen("save.tmp", "wb");
 	fwrite(g_state, sizeof(Game_State), 1, file);
@@ -86,13 +109,22 @@ void SaveGame(Game_State *g_state) {
 }
 
 bool LoadGame(Game_State *g_state) {
+	Game_State loaded_state;
 	FILE *file = fopen("save.dat", "rb");
 	if (file == NULL)
 		return false;
-	fread(g_state, sizeof(Game_State), 1, file);
+	if (fread(&loaded_state, sizeof(Game_State), 1, file) != 1) {
+		printf("FAILED TO READ SAVE.DAT\n");
+		fclose(file);
+		return false;
+	}
 	fclose(file);
-	if (g_state->version != 1)
-		printf("WRONG VERSION");
+	if (loaded_state.version != VERSION) {
+		printf("WRONG VERSION\n");
+		return false;
+	}
+
+	memcpy(g_state, &loaded_state, sizeof(Game_State));
 
 	return true;
 }
@@ -101,7 +133,7 @@ void game_init(Game_State *g_state) {
 	assert(g_state != NULL && "g_state should not be null");
 	memset(g_state, 0, sizeof(Game_State));
 
-	g_state->version = 1;
+	g_state->version = VERSION;
 
 	g_state->money = 1000;
 	g_state->net_worth = 1000;
@@ -109,12 +141,14 @@ void game_init(Game_State *g_state) {
 	g_state->timer = 0.0;
 	g_state->price_update_timer = 0.0;
 	g_state->ticker_x = 800;
+	g_state->max_click_profit = 20;
+	g_state->min_click_profit = 1;
 
-	g_state->stocks[0] = (Stock){"Tech Co", 100, 100, 5, 0};
-	g_state->stocks[1] = (Stock){"Auto Inc", 250, 250, 15, 0};
-	g_state->stocks[2] = (Stock){"Bank Corp", 500, 500, 30, 0};
-	g_state->stocks[3] = (Stock){"Textio", 750, 750, 45, 0};
-	g_state->stocks[4] = (Stock){"Boot.dev", 1000, 1000, 60, 0};
+	g_state->stocks[0] = (Stock){"Tech Co", 100, 100, 5, 0, {0}, 0};
+	g_state->stocks[1] = (Stock){"Auto Inc", 250, 250, 15, 0, {0}, 0};
+	g_state->stocks[2] = (Stock){"Bank Corp", 500, 500, 30, 0, {0}, 0};
+	g_state->stocks[3] = (Stock){"Textio", 750, 750, 45, 0, {0}, 0};
+	g_state->stocks[4] = (Stock){"Boot.dev", 1000, 1000, 60, 0, {0}, 0};
 
 	// hardcode rng state for now
 	g_state->rng_state = 1337;
@@ -181,6 +215,9 @@ void UpdateStockPrices(Game_State *g_state) {
 			g_state->stocks[i].price /= 2;
 		}
 		g_state->stocks[i].income_per_sec = (int)(g_state->stocks[i].price * 0.1);
+
+		// update stock price history
+		StockHistoryAdd(&g_state->stocks[i]);
 
 		// add to ticker
 		char message[100];
@@ -351,7 +388,7 @@ int main() {
 
 		// check if over trade button and trade if clicked
 		if (CheckCollisionPointRec(mouse_pos, tradeButton) && IsMouseButtonPressed(MOUSE_BUTTON_LEFT)) {
-			g_state.money += ((int)Xorshift32(&g_state.rng_state) % (max_click_profit - min_click_profit + 1)) + min_click_profit;
+			g_state.money += ((int)Xorshift32(&g_state.rng_state) % (g_state.max_click_profit - g_state.min_click_profit + 1)) + g_state.min_click_profit;
 			assert(g_state.money >= 0 && "money should never be negative");
 		}
 
