@@ -72,6 +72,27 @@ Rectangle GetSellButtonRect(int stock_i);
 void SaveGame(Game_State *g_state);
 bool LoadGame(Game_State *g_state);
 void StockHistoryAdd(Stock *stock);
+void DrawStockSparkline(const Stock *stock, Rectangle bounds);
+
+void DrawStockSparkline(const Stock *stock, Rectangle bounds) {
+	assert(stock != NULL);
+	if (stock->history_count < 2) {
+		return; // Need 2 points to draw a line
+	}
+
+	int min_price, max_price = stock->history[0];
+	for (int i = 1; i < stock->history_count; i++) {
+		if (stock->history[i] < min_price)
+			min_price = stock->history[i];
+		if (stock->history[i] > max_price)
+			max_price = stock->history[i];
+	}
+
+	int price_range = max_price - min_price;
+	if (price_range == 0) {
+		price_range = 1; // guard against div by 0
+	}
+}
 
 void StockHistoryAdd(Stock *stock) {
 	assert(stock != NULL);
@@ -278,7 +299,7 @@ void DrawStockMarket(Game_State *g_state) {
 	snprintf(stock_title, 100, "Stock Market - Money: $%d Net Worth: $%d",
 			 g_state->money, g_state->net_worth);
 	DrawText(stock_title, x, y - 30, 20, GOLD);
-	DrawRectangle(x - 10, y - 10, 605, 40 * MAX_STOCKS, Fade(DARKGRAY, 0.5f));
+	DrawRectangle(x - 10, y - 10, 710, 40 * MAX_STOCKS, Fade(DARKGRAY, 0.5f));
 	Vector2 mouse_pos = GetMousePosition();
 
 	for (int i = 0; i < MAX_STOCKS; i++) {
