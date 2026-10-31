@@ -80,7 +80,9 @@ void DrawStockSparkline(const Stock *stock, Rectangle bounds) {
 		return; // Need 2 points to draw a line
 	}
 
-	int min_price, max_price = stock->history[0];
+	int min_price = stock->history[0];
+	int max_price = stock->history[0];
+
 	for (int i = 1; i < stock->history_count; i++) {
 		if (stock->history[i] < min_price)
 			min_price = stock->history[i];
